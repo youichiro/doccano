@@ -1,5 +1,9 @@
 <template>
   <v-card>
+    <v-tabs v-if="hasMultiType" v-model="tab">
+      <v-tab class="text-capitalize">Category</v-tab>
+      <v-tab class="text-capitalize">Span</v-tab>
+    </v-tabs>
     <v-card-title>
       <action-menu
         @create="dialogCreate=true"
@@ -59,7 +63,6 @@ import { LabelDTO } from '~/services/application/label/labelData'
 import { ProjectDTO } from '~/services/application/project/projectData'
 
 export default Vue.extend({
-  layout: 'project',
 
   components: {
     ActionMenu,
@@ -68,11 +71,16 @@ export default Vue.extend({
     FormUpload,
     LabelList
   },
+  layout: 'project',
 
-  async fetch() {
-    this.isLoading = true
-    this.items = await this.$services.label.list(this.projectId)
-    this.isLoading = false
+  validate({ params, app }) {
+    if (/^\d+$/.test(params.id)) {
+      return app.$services.project.findById(params.id)
+      .then((res:ProjectDTO) => {
+        return res.canDefineLabel
+      })
+    }
+    return false
   },
 
   data() {
@@ -98,9 +106,20 @@ export default Vue.extend({
       items: [] as LabelDTO[],
       selected: [] as LabelDTO[],
       isLoading: false,
-      errorMessage: ''
+      errorMessage: '',
+      tab: null,
+      project: {} as ProjectDTO,
     }
   },
+
+  // async fetch() {
+  //   this.items = []
+  //   this.isLoading = true
+  //   console.log('start fetch')
+  //   this.items = await this.service.list(this.projectId)
+  //   console.log('end fetch')
+  //   this.isLoading = false
+  // },
 
   computed: {
     canDelete(): boolean {
@@ -117,25 +136,67 @@ export default Vue.extend({
       const item = this.items[this.editedIndex] // to remove myself
       return this.items.filter(_ => _ !== item).map(item => item.suffixKey)
                        .filter(item => item !==null) as string[]
+    },
+    hasMultiType(): boolean {
+      if ('projectType' in this.project) {
+        return this.project.projectType === 'IntentDetectionAndSlotFilling'
+      } else {
+        return false
+      }
+    },
+
+    service(): any {
+      if (!('projectType' in this.project)) {
+        return
+      }
+      if (this.hasMultiType) {
+        if (this.tab === 0) {
+          return this.$services.categoryType
+        } else {
+          return this.$services.spanType
+        }
+      } else if (this.project.projectType.endsWith('Classification')) {
+        return this.$services.categoryType
+      } else {
+        return this.$services.spanType
+      }
     }
   },
 
+  watch: {
+    tab() {
+      this.list()
+    }
+  },
+
+  async created() {
+    this.project = await this.$services.project.findById(this.projectId)
+    this.list()
+  },
+
   methods: {
+    async list() {
+      this.items = []
+      this.isLoading = true
+      this.items = await this.service.list(this.projectId)
+      this.isLoading = false
+    },
+
     async create() {
-      await this.$services.label.create(this.projectId, this.editedItem)
+      await this.service.create(this.projectId, this.editedItem)
     },
 
     async update() {
-      await this.$services.label.update(this.projectId, this.editedItem)
+      await this.service.update(this.projectId, this.editedItem)
     },
 
-    save() {
+    async save() {
       if (this.editedIndex > -1) {
-        this.update()
+        await this.update()
       } else {
-        this.create()
+        await this.create()
       }
-      this.$fetch()
+      await this.list()
       this.close()
     },
 
@@ -148,20 +209,20 @@ export default Vue.extend({
     },
 
     async remove() {
-      await this.$services.label.bulkDelete(this.projectId, this.selected)
-      this.$fetch()
+      await this.service.bulkDelete(this.projectId, this.selected)
+      this.list()
       this.dialogDelete = false
       this.selected = []
     },
 
     async download() {
-      await this.$services.label.export(this.projectId)
+      await this.service.export(this.projectId)
     },
 
     async upload(file: File) {
       try {
-        await this.$services.label.upload(this.projectId, file)
-        this.$fetch()
+        await this.service.upload(this.projectId, file)
+        this.list()
         this.closeUpload()
       } catch(e) {
         this.errorMessage = e.message
@@ -182,16 +243,6 @@ export default Vue.extend({
       this.editedItem = Object.assign({}, item)
       this.dialogCreate = true
     }
-  },
-
-  validate({ params, app }) {
-    if (/^\d+$/.test(params.id)) {
-      return app.$services.project.findById(params.id)
-      .then((res:ProjectDTO) => {
-        return res.canDefineLabel
-      })
-    }
-    return false
   }
 })
 </script>

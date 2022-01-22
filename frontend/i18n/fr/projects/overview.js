@@ -12,6 +12,9 @@ export default {
   projectTypes: [
     'Classification des textes',
     'Étiquetage des séquences',
-    'Séquence à séquence'
+    'Séquence à séquence',
+    'Détection d\'intention et remplissage d\'emplacements',
+    'Classification d\'images',
+    'De la parole au texte',
   ]
 }

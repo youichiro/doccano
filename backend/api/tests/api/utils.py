@@ -8,10 +8,13 @@ from model_mommy import mommy
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ...models import (DOCUMENT_CLASSIFICATION, IMAGE_CLASSIFICATION, SEQ2SEQ,
-                       SEQUENCE_LABELING, SPEECH2TEXT, Role, RoleMapping)
+from api.models import (DOCUMENT_CLASSIFICATION, IMAGE_CLASSIFICATION,
+                        INTENT_DETECTION_AND_SLOT_FILLING, SEQ2SEQ,
+                        SEQUENCE_LABELING, SPEECH2TEXT)
+from members.models import Member
+from roles.models import Role
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), '../data')
+DATA_DIR = os.path.join(os.path.dirname(__file__), '../../../data_import/tests/data')
 
 
 ProjectData = namedtuple('ProjectData', ['item', 'users'])
@@ -25,17 +28,17 @@ def create_default_roles():
 
 def assign_user_to_role(project_member, project, role_name):
     role, _ = Role.objects.get_or_create(name=role_name)
-    if RoleMapping.objects.filter(user=project_member, project=project).exists():
-        mapping = RoleMapping.objects.get(user=project_member, project=project)
+    if Member.objects.filter(user=project_member, project=project).exists():
+        mapping = Member.objects.get(user=project_member, project=project)
         mapping.role = role
         mapping.save()
     else:
-        mapping = RoleMapping.objects.get_or_create(role_id=role.id, user_id=project_member.id, project_id=project.id)
+        mapping = Member.objects.get_or_create(role_id=role.id, user_id=project_member.id, project_id=project.id)
     return mapping
 
 
-def remove_all_role_mappings():
-    RoleMapping.objects.all().delete()
+def remove_all_members():
+    Member.objects.all().delete()
 
 
 def make_user(username: str = 'bob'):
@@ -48,7 +51,8 @@ def make_project(
         task: str,
         users: List[str],
         roles: List[str] = None,
-        collaborative_annotation=False):
+        collaborative_annotation=False,
+        **kwargs):
     create_default_roles()
 
     # create users.
@@ -62,13 +66,15 @@ def make_project(
         SEQUENCE_LABELING: 'SequenceLabelingProject',
         SEQ2SEQ: 'Seq2seqProject',
         SPEECH2TEXT: 'Speech2TextProject',
-        IMAGE_CLASSIFICATION: 'ImageClassificationProject'
+        IMAGE_CLASSIFICATION: 'ImageClassificationProject',
+        INTENT_DETECTION_AND_SLOT_FILLING: 'IntentDetectionAndSlotFillingProject'
     }.get(task, 'Project')
     project = mommy.make(
         _model=project_model,
         project_type=task,
-        users=users,
-        collaborative_annotation=collaborative_annotation
+        collaborative_annotation=collaborative_annotation,
+        created_by=users[0],
+        **kwargs
     )
 
     # assign roles to the users.
@@ -85,8 +91,11 @@ def make_tag(project):
     return mommy.make('Tag', project=project)
 
 
-def make_label(project):
-    return mommy.make('Label', project=project)
+def make_label(project, **kwargs):
+    if project.project_type.endswith('Classification'):
+        return mommy.make('CategoryType', project=project, **kwargs)
+    else:
+        return mommy.make('SpanType', project=project, **kwargs)
 
 
 def make_doc(project):
@@ -109,17 +118,17 @@ def make_auto_labeling_config(project):
     return mommy.make('AutoLabelingConfig', project=project)
 
 
-def make_annotation(task, doc, user):
+def make_annotation(task, doc, user, **kwargs):
     annotation_model = {
         DOCUMENT_CLASSIFICATION: 'Category',
         SEQUENCE_LABELING: 'Span',
         SEQ2SEQ: 'TextLabel',
         SPEECH2TEXT: 'TextLabel'
     }.get(task)
-    return mommy.make(annotation_model, example=doc, user=user)
+    return mommy.make(annotation_model, example=doc, user=user, **kwargs)
 
 
-def prepare_project(task: str = 'Any', collaborative_annotation=False):
+def prepare_project(task: str = 'Any', collaborative_annotation=False, **kwargs):
     return make_project(
         task=task,
         users=['admin', 'approver', 'annotator'],
@@ -128,7 +137,8 @@ def prepare_project(task: str = 'Any', collaborative_annotation=False):
             settings.ROLE_ANNOTATION_APPROVER,
             settings.ROLE_ANNOTATOR,
         ],
-        collaborative_annotation=collaborative_annotation
+        collaborative_annotation=collaborative_annotation,
+        **kwargs
     )
 
 

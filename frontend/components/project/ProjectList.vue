@@ -16,25 +16,25 @@
     show-select
     @input="$emit('input', $event)"
   >
-    <template v-slot:top>
+    <template #top>
       <v-text-field
         v-model="search"
-        prepend-inner-icon="search"
+        :prepend-inner-icon="mdiMagnify"
         :label="$t('generic.search')"
         single-line
         hide-details
         filled
       />
     </template>
-    <template v-slot:[`item.name`]="{ item }">
+    <template #[`item.name`]="{ item }">
       <nuxt-link :to="localePath(`/projects/${item.id}`)">
         <span>{{ item.name }}</span>
       </nuxt-link>
     </template>
-    <template v-slot:[`item.updatedAt`]="{ item }">
+    <template #[`item.updatedAt`]="{ item }">
       <span>{{ item.updatedAt | dateParse('YYYY-MM-DDTHH:mm:ss') | dateFormat('DD/MM/YYYY HH:mm') }}</span>
     </template>
-    <template v-slot:[`item.tags`]="{ item }">
+    <template #[`item.tags`]="{ item }">
       <v-chip
       v-for="tag in item.tags"
       :key="tag.id"
@@ -46,6 +46,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import { mdiMagnify } from '@mdi/js'
 import VueFilterDateFormat from '@vuejs-community/vue-filter-date-format'
 import VueFilterDateParse from '@vuejs-community/vue-filter-date-parse'
 Vue.use(VueFilterDateFormat)
@@ -71,7 +72,8 @@ export default Vue.extend({
   },
   data() {
     return {
-      search: ''
+      search: '',
+      mdiMagnify
     }
   },
 

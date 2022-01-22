@@ -10,7 +10,7 @@ import { APISeq2seqRepository } from '~/repositories/tasks/seq2seq/apiSeq2seq'
 import { APIConfigRepository } from '~/repositories/autoLabeling/config/apiConfigRepository'
 import { APITemplateRepository } from '~/repositories/autoLabeling/template/apiTemplateRepository'
 import { APIUserRepository } from '~/repositories/user/apiUserRepository'
-import { APIStatisticsRepository } from '~/repositories/statistics/apiStatisticsRepository'
+import { APIMetricsRepository } from '~/repositories/metrics/apiMetricsRepository'
 import { APIRoleRepository } from '~/repositories/role/apiRoleRepository'
 import { APIProjectRepository } from '~/repositories/project/apiProjectRepository'
 import { LocalStorageOptionRepository} from '~/repositories/option/apiOptionRepository'
@@ -25,7 +25,7 @@ import { UserApplicationService } from '~/services/application/user/userApplicat
 import { RoleApplicationService } from '~/services/application/role/roleApplicationService'
 import { ProjectApplicationService } from '~/services/application/project/projectApplicationService'
 import { CommentApplicationService } from '~/services/application/comment/commentApplicationService'
-import { StatisticsApplicationService } from '~/services/application/statistics/statisticsApplicationService'
+import { MetricsApplicationService } from '~/services/application/metrics/metricsApplicationService'
 import { ExampleApplicationService } from '~/services/application/example/exampleApplicationService'
 import { OptionApplicationService } from '~/services/application/option/optionApplicationService'
 import { SequenceLabelingApplicationService } from '~/services/application/tasks/sequenceLabeling/sequenceLabelingApplicationService'
@@ -46,14 +46,15 @@ import {LinkTypesApplicationService} from "~/services/application/links/linkType
 import {ApiLinkTypesRepository} from "~/repositories/links/apiLinkTypesRepository";
 
 export interface Services {
-  label: LabelApplicationService,
+  categoryType: LabelApplicationService,
+  spanType: LabelApplicationService,
   linkTypes: LinkTypesApplicationService,
   member: MemberApplicationService,
   user: UserApplicationService,
   role: RoleApplicationService,
   project: ProjectApplicationService,
   comment: CommentApplicationService,
-  statistics: StatisticsApplicationService,
+  metrics: MetricsApplicationService,
   example: ExampleApplicationService,
   textClassification: TextClassificationApplicationService,
   sequenceLabeling: SequenceLabelingApplicationService,
@@ -77,14 +78,13 @@ declare module 'vue/types/vue' {
 }
 
 const plugin: Plugin = (context, inject) => {
-  const labelRepository      = new APILabelRepository()
   const linkTypesRepository = new ApiLinkTypesRepository()
   const memberRepository     = new APIMemberRepository()
   const userRepository       = new APIUserRepository()
   const roleRepository       = new APIRoleRepository()
   const projectRepository    = new APIProjectRepository()
   const commentRepository    = new APICommentRepository()
-  const statisticsRepository = new APIStatisticsRepository()
+  const metricsRepository = new APIMetricsRepository()
   const exampleRepository    = new APIExampleRepository()
   const textClassificationRepository = new APITextClassificationRepository()
   const sequenceLabelingRepository   = new APISequenceLabelingRepository()
@@ -101,14 +101,15 @@ const plugin: Plugin = (context, inject) => {
   const downloadFormatRepository = new APIDownloadFormatRepository()
   const downloadRepository = new APIDownloadRepository()
 
-  const label      = new LabelApplicationService(labelRepository)
+  const categoryType  = new LabelApplicationService(new APILabelRepository('category-type'))
+  const spanType      = new LabelApplicationService(new APILabelRepository('span-type'))
   const linkTypes = new LinkTypesApplicationService(linkTypesRepository)
   const member     = new MemberApplicationService(memberRepository)
   const user       = new UserApplicationService(userRepository)
   const role       = new RoleApplicationService(roleRepository)
   const project    = new ProjectApplicationService(projectRepository)
   const comment    = new CommentApplicationService(commentRepository)
-  const statistics = new StatisticsApplicationService(statisticsRepository)
+  const metrics = new MetricsApplicationService(metricsRepository)
   const example    = new ExampleApplicationService(exampleRepository)
   const textClassification = new TextClassificationApplicationService(textClassificationRepository)
   const sequenceLabeling   = new SequenceLabelingApplicationService(sequenceLabelingRepository, linkRepository)
@@ -125,14 +126,15 @@ const plugin: Plugin = (context, inject) => {
   const download = new DownloadApplicationService(downloadRepository)
   
   const services: Services = {
-    label,
+    categoryType,
+    spanType,
     linkTypes,
     member,
     user,
     role,
     project,
     comment,
-    statistics,
+    metrics,
     example,
     textClassification,
     sequenceLabeling,

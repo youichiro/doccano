@@ -1,25 +1,13 @@
-from auto_labeling_pipeline.models import RequestModelFactory
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_polymorphic.serializers import PolymorphicSerializer
 
-from .models import (DOCUMENT_CLASSIFICATION, IMAGE_CLASSIFICATION, SEQ2SEQ,
-                     SEQUENCE_LABELING, SPEECH2TEXT, AnnotationRelations,
-                     AutoLabelingConfig, Category, Comment, Example,
-                     ExampleState, ImageClassificationProject, Label, Project,
-                     RelationTypes, Role, RoleMapping, Seq2seqProject,
-                     SequenceLabelingProject, Span, Speech2textProject, Tag,
+from .models import (AnnotationRelations, Category, CategoryType, Comment,
+                     Example, ExampleState, ImageClassificationProject,
+                     IntentDetectionAndSlotFillingProject, Label, Project,
+                     RelationTypes, Seq2seqProject, SequenceLabelingProject,
+                     Span, SpanType, Speech2textProject, Tag,
                      TextClassificationProject, TextLabel)
-
-
-class UserSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = get_user_model()
-        fields = ('id', 'username', 'is_superuser')
 
 
 class LabelSerializer(serializers.ModelSerializer):
@@ -44,7 +32,7 @@ class LabelSerializer(serializers.ModelSerializer):
         except (AttributeError, KeyError):
             pass  # unit tests don't always have the correct context set up
         else:
-            conflicting_labels = Label.objects.filter(
+            conflicting_labels = self.Meta.model.objects.filter(
                 suffix_key=suffix_key,
                 prefix_key=prefix_key,
                 project=project_id,
@@ -60,7 +48,40 @@ class LabelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Label
-        fields = ('id', 'text', 'prefix_key', 'suffix_key', 'background_color', 'text_color')
+        fields = (
+            'id',
+            'text',
+            'prefix_key',
+            'suffix_key',
+            'background_color',
+            'text_color',
+        )
+
+
+class CategoryTypeSerializer(LabelSerializer):
+    class Meta:
+        model = CategoryType
+        fields = (
+            'id',
+            'text',
+            'prefix_key',
+            'suffix_key',
+            'background_color',
+            'text_color',
+        )
+
+
+class SpanTypeSerializer(LabelSerializer):
+    class Meta:
+        model = SpanType
+        fields = (
+            'id',
+            'text',
+            'prefix_key',
+            'suffix_key',
+            'background_color',
+            'text_color',
+        )
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -80,20 +101,8 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class ExampleSerializer(serializers.ModelSerializer):
-    annotations = serializers.SerializerMethodField()
     annotation_approver = serializers.SerializerMethodField()
     is_confirmed = serializers.SerializerMethodField()
-
-    def get_annotations(self, instance):
-        request = self.context.get('request')
-        project = instance.project
-        model = project.get_annotation_class()
-        serializer = get_annotation_serializer(task=project.project_type)
-        annotations = model.objects.filter(example=instance.id)
-        if request and not project.collaborative_annotation:
-            annotations = annotations.filter(user=request.user)
-        serializer = serializer(annotations, many=True)
-        return serializer.data
 
     @classmethod
     def get_annotation_approver(cls, instance):
@@ -101,14 +110,18 @@ class ExampleSerializer(serializers.ModelSerializer):
         return approver.username if approver else None
 
     def get_is_confirmed(self, instance):
-        return instance.states.count() > 0
+        user = self.context.get('request').user
+        if instance.project.collaborative_annotation:
+            states = instance.states.all()
+        else:
+            states = instance.states.filter(confirmed_by_id=user.id)
+        return states.count() > 0
 
     class Meta:
         model = Example
         fields = [
             'id',
             'filename',
-            'annotations',
             'meta',
             'annotation_approver',
             'comment_count',
@@ -134,23 +147,7 @@ class ApproverSerializer(ExampleSerializer):
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    current_users_role = serializers.SerializerMethodField()
     tags = TagSerializer(many=True, required=False)
-
-    def get_current_users_role(self, instance):
-        role_abstractor = {
-            "is_project_admin": settings.ROLE_PROJECT_ADMIN,
-            "is_annotator": settings.ROLE_ANNOTATOR,
-            "is_annotation_approver": settings.ROLE_ANNOTATION_APPROVER,
-        }
-        queryset = RoleMapping.objects.values("role_id__name")
-        if queryset:
-            users_role = get_object_or_404(
-                queryset, project=instance.id, user=self.context.get("request").user.id
-            )
-            for key, val in role_abstractor.items():
-                role_abstractor[key] = users_role["role_id__name"] == val
-        return role_abstractor
 
     class Meta:
         model = Project
@@ -159,19 +156,26 @@ class ProjectSerializer(serializers.ModelSerializer):
             'name',
             'description',
             'guideline',
-            'users',
-            'current_users_role',
             'project_type',
             'updated_at',
             'random_order',
+            'created_by',
             'collaborative_annotation',
             'single_class_classification',
+            'is_text_project',
+            'can_define_label',
+            'can_define_relation',
+            'can_define_category',
+            'can_define_span',
             'tags'
         )
         read_only_fields = (
             'updated_at',
-            'users',
-            'current_users_role',
+            'is_text_project',
+            'can_define_label',
+            'can_define_relation',
+            'can_define_category',
+            'can_define_span',
             'tags'
         )
 
@@ -186,12 +190,19 @@ class SequenceLabelingProjectSerializer(ProjectSerializer):
 
     class Meta(ProjectSerializer.Meta):
         model = SequenceLabelingProject
+        fields = ProjectSerializer.Meta.fields + ('allow_overlapping', 'grapheme_mode')
 
 
 class Seq2seqProjectSerializer(ProjectSerializer):
 
     class Meta(ProjectSerializer.Meta):
         model = Seq2seqProject
+
+
+class IntentDetectionAndSlotFillingProjectSerializer(ProjectSerializer):
+
+    class Meta(ProjectSerializer.Meta):
+        model = IntentDetectionAndSlotFillingProject
 
 
 class Speech2textProjectSerializer(ProjectSerializer):
@@ -216,7 +227,7 @@ class ProjectPolymorphicSerializer(PolymorphicSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    label = serializers.PrimaryKeyRelatedField(queryset=Label.objects.all())
+    label = serializers.PrimaryKeyRelatedField(queryset=CategoryType.objects.all())
     example = serializers.PrimaryKeyRelatedField(queryset=Example.objects.all())
 
     class Meta:
@@ -234,7 +245,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class SpanSerializer(serializers.ModelSerializer):
-    label = serializers.PrimaryKeyRelatedField(queryset=Label.objects.all())
+    label = serializers.PrimaryKeyRelatedField(queryset=SpanType.objects.all())
     example = serializers.PrimaryKeyRelatedField(queryset=Example.objects.all())
 
     class Meta:
@@ -268,79 +279,6 @@ class TextLabelSerializer(serializers.ModelSerializer):
             'text',
         )
         read_only_fields = ('user',)
-
-
-class RoleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Role
-        fields = ('id', 'name')
-
-
-class RoleMappingSerializer(serializers.ModelSerializer):
-    username = serializers.SerializerMethodField()
-    rolename = serializers.SerializerMethodField()
-
-    @classmethod
-    def get_username(cls, instance):
-        user = instance.user
-        return user.username if user else None
-
-    @classmethod
-    def get_rolename(cls, instance):
-        role = instance.role
-        return role.name if role else None
-
-    class Meta:
-        model = RoleMapping
-        fields = ('id', 'user', 'role', 'username', 'rolename')
-
-
-class AutoLabelingConfigSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = AutoLabelingConfig
-        fields = ('id', 'model_name', 'model_attrs', 'template', 'label_mapping', 'default')
-        read_only_fields = ('created_at', 'updated_at')
-
-    def validate_model_name(self, value):
-        try:
-            RequestModelFactory.find(value)
-        except NameError:
-            raise serializers.ValidationError(f'The specified model name {value} does not exist.')
-        return value
-
-    def valid_label_mapping(self, value):
-        if isinstance(value, dict):
-            return value
-        else:
-            raise serializers.ValidationError(f'The {value} is not a dictionary. Please specify it as a dictionary.')
-
-    def validate(self, data):
-        try:
-            RequestModelFactory.create(data['model_name'], data['model_attrs'])
-        except Exception:
-            model = RequestModelFactory.find(data['model_name'])
-            schema = model.schema()
-            required_fields = ', '.join(schema['required']) if 'required' in schema else ''
-            raise serializers.ValidationError(
-                'The attributes does not match the model.'
-                'You need to correctly specify the required fields: {}'.format(required_fields)
-            )
-        return data
-
-
-def get_annotation_serializer(task: str):
-    mapping = {
-        DOCUMENT_CLASSIFICATION: CategorySerializer,
-        SEQUENCE_LABELING: SpanSerializer,
-        SEQ2SEQ: TextLabelSerializer,
-        SPEECH2TEXT: TextLabelSerializer,
-        IMAGE_CLASSIFICATION: CategorySerializer,
-    }
-    try:
-        return mapping[task]
-    except KeyError:
-        raise ValueError(f'{task} is not implemented.')
 
 
 class RelationTypesSerializer(serializers.ModelSerializer):

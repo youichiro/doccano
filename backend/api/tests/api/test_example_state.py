@@ -54,14 +54,14 @@ class TestExampleStateConfirmCollaborative(CRUDMixin):
         self.example = make_doc(self.project.item)
         self.url = reverse(viewname='example_state_list', args=[self.project.item.id, self.example.id])
 
-    def test_can_share_example_state(self):
-        member1 = self.project.users[0]
-        member2 = self.project.users[1]
-        response = self.assert_fetch(member1, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
-        self.assert_create(member1, status.HTTP_201_CREATED)  # confirm
-        response = self.assert_fetch(member1, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 1)
-        self.assert_create(member2, status.HTTP_201_CREATED)  # toggle confirm
-        response = self.assert_fetch(member1, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 0)
+    def test_initial_state(self):
+        for user in self.project.users:
+            response = self.assert_fetch(user, status.HTTP_200_OK)
+            self.assertEqual(response.data['count'], 0)
+
+    def test_can_approve_state(self):
+        admin = self.project.users[0]
+        self.assert_create(admin, status.HTTP_201_CREATED)
+        for user in self.project.users:
+            response = self.assert_fetch(user, status.HTTP_200_OK)
+            self.assertEqual(response.data['count'], 1)

@@ -18,7 +18,7 @@
           item-text="username"
           :label="$t('members.userSearchAPIs')"
           :placeholder="$t('members.userSearchPrompt')"
-          prepend-icon="mdi-account"
+          :prepend-icon="mdiAccount"
           :rules="[rules.userRequired]"
           return-object
         />
@@ -30,12 +30,12 @@
           :label="$t('members.role')"
           :rules="[rules.roleRequired]"
           return-object
-          prepend-icon="mdi-credit-card-outline"
+          :prepend-icon="mdiCreditCardOutline"
         >
-          <template v-slot:item="props">
+          <template #item="props">
             {{ $translateRole(props.item.rolename, $t('members.roles')) }}
           </template>
-          <template v-slot:selection="props">
+          <template #selection="props">
             {{ $translateRole(props.item.rolename, $t('members.roles')) }}
           </template>
         </v-select>
@@ -57,6 +57,7 @@
 
 <script lang="ts">
 import Vue, { PropType } from 'vue'
+import { mdiAccount, mdiCreditCardOutline } from '@mdi/js'
 import BaseCard from '@/components/utils/BaseCard.vue'
 import { UserDTO } from '~/services/application/user/userData'
 import { RoleDTO } from '~/services/application/role/roleData'
@@ -78,12 +79,6 @@ export default Vue.extend({
     }
   },
 
-  async fetch() {
-    this.isLoading = true
-    this.users = await this.$services.user.list(this.username)
-    this.isLoading = false
-  },
-
   data() {
     return {
       isLoading: false,
@@ -94,8 +89,16 @@ export default Vue.extend({
       rules: {
         userRequired: (v: UserDTO) => !!v && !!v.username || 'Required',
         roleRequired: (v: RoleDTO) => !!v && !!v.rolename || 'Required'
-      }
+      },
+      mdiAccount,
+      mdiCreditCardOutline
     }
+  },
+
+  async fetch() {
+    this.isLoading = true
+    this.users = await this.$services.user.list(this.username)
+    this.isLoading = false
   },
 
   computed: {
@@ -103,7 +106,8 @@ export default Vue.extend({
       get(): UserDTO {
         return {
           id: this.value.user,
-          username: this.value.username
+          username: this.value.username,
+          isStaff: false
         }
       },
       set(val: MemberDTO) {

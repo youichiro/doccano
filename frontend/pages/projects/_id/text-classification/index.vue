@@ -1,12 +1,11 @@
 <template>
   <layout-text v-if="example.id">
-    <template v-slot:header>
+    <template #header>
       <toolbar-laptop
         :doc-id="example.id"
         :enable-auto-labeling.sync="enableAutoLabeling"
         :guideline-text="project.guideline"
         :is-reviewd="example.isConfirmed"
-        :show-approve-button="project.permitApprove"
         :total="totalExample"
         class="d-none d-sm-block"
         @click:clear-label="clearTeacherList(project.id, example.id)"
@@ -22,7 +21,7 @@
         class="d-flex d-sm-none"
       />
     </template>
-    <template v-slot:content>
+    <template #content>
       <v-card
         v-shortkey="shortKeys"
         @shortkey="annotateOrRemoveLabel(project.id, example.id, $event.srcKey)"
@@ -45,7 +44,7 @@
         />
       </v-card>
     </template>
-    <template v-slot:sidebar>
+    <template #sidebar>
       <list-metadata :metadata="example.meta" />
     </template>
   </layout-text>
@@ -66,7 +65,6 @@ import { useProjectItem } from '@/composables/useProjectItem'
 import { useTeacherList } from '@/composables/useTeacherList'
 
 export default {
-  layout: 'workspace',
 
   components: {
     ButtonLabelSwitch,
@@ -76,6 +74,11 @@ export default {
     ListMetadata,
     ToolbarLaptop,
     ToolbarMobile
+  },
+  layout: 'workspace',
+
+  validate({ params, query }) {
+    return /^\d+$/.test(params.id) && /^\d+$/.test(query.page)
   },
 
   setup() {
@@ -93,7 +96,7 @@ export default {
       removeTeacher
     } = useTeacherList(app.$services.textClassification)
     const enableAutoLabeling = ref(false)
-    const { state: labelState, getLabelList, shortKeys } = useLabelList()
+    const { state: labelState, getLabelList, shortKeys } = useLabelList(app.$services.categoryType)
     const labelComponent = ref('label-group')
 
     getLabelList(projectId)
@@ -131,10 +134,6 @@ export default {
       removeTeacher,
       shortKeys,
     }
-  },
-
-  validate({ params, query }) {
-    return /^\d+$/.test(params.id) && /^\d+$/.test(query.page)
   }
 }
 </script>

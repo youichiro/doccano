@@ -17,17 +17,17 @@
     show-select
     @input="$emit('input', $event)"
   >
-    <template v-slot:top>
+    <template #top>
       <v-text-field
         v-model="search"
-        prepend-inner-icon="search"
+        :prepend-inner-icon="mdiMagnify"
         :label="$t('generic.search')"
         single-line
         hide-details
         filled
       />
     </template>
-    <template v-slot:[`item.color`]="props">
+    <template #[`item.color`]="props">
       <v-chip
         :color="props.item.color"
         :text-color="$contrastColor(props.item.color)"
@@ -35,12 +35,12 @@
         {{ props.item.color }}
       </v-chip>
     </template>
-    <template v-slot:[`item.actions`]="{ item }">
+    <template #[`item.actions`]="{ item }">
       <v-icon
         small
         @click="$emit('edit', item)"
       >
-        mdi-pencil
+        {{ mdiPencil }}
       </v-icon>
     </template>
   </v-data-table>
@@ -48,6 +48,7 @@
 
 <script lang="ts">
 import Vue, { PropType } from 'vue'
+import { mdiPencil, mdiMagnify } from '@mdi/js'
 import { LinkTypeDTO } from '~/services/application/links/linkData'
 
 export default Vue.extend({
@@ -71,7 +72,9 @@ export default Vue.extend({
 
   data() {
     return {
-      search: ''
+      search: '',
+      mdiPencil,
+      mdiMagnify
     }
   },
 

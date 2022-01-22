@@ -9,9 +9,8 @@
 import TheHeader from '~/components/layout/TheHeader'
 
 export default {
-  middleware: ['check-auth'],
   components: {
     TheHeader
-  }
+  },
 }
 </script>

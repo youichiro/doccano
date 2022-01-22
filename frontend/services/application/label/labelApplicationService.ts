@@ -1,4 +1,5 @@
 import { LabelDTO } from './labelData'
+import { CreateLabelCommand } from './labelCommand';
 import { LabelRepository } from '~/domain/models/label/labelRepository'
 import { LabelItem } from '~/domain/models/label/label'
 
@@ -13,13 +14,26 @@ export class LabelApplicationService {
     return items.map(item => new LabelDTO(item))
   }
 
-  public create(projectId: string, item: LabelDTO): void {
-    const label = new LabelItem(0, item.text, item.prefixKey, item.suffixKey, item.backgroundColor, item.textColor)
+  public create(projectId: string, item: CreateLabelCommand): void {
+    // Todo: use auto mapping.
+    const label = new LabelItem()
+    label.text = item.text
+    label.prefixKey = item.prefixKey
+    label.suffixKey = item.suffixKey
+    label.backgroundColor = item.backgroundColor
+    label.textColor = item.textColor
     this.repository.create(projectId, label)
   }
 
   public update(projectId: string, item: LabelDTO): void {
-    const label = new LabelItem(item.id, item.text, item.prefixKey, item.suffixKey, item.backgroundColor, item.textColor)
+    // Todo: use auto mapping.
+    const label = new LabelItem()
+    label.id = item.id
+    label.text = item.text
+    label.prefixKey = item.prefixKey
+    label.suffixKey = item.suffixKey
+    label.backgroundColor = item.backgroundColor
+    label.textColor = item.textColor
     this.repository.update(projectId, label)
   }
 

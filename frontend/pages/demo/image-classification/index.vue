@@ -35,12 +35,12 @@ import ListMetadata from '@/components/tasks/metadata/ListMetadata'
 import LabelGroup from '@/components/tasks/textClassification/LabelGroup'
 
 export default {
-  layout: 'demo',
 
   components: {
     LabelGroup,
     ListMetadata
   },
+  layout: 'demo',
 
   data() {
     return {
@@ -65,7 +65,7 @@ export default {
       singleLabel: true,
       currentDoc: {
         id: 8,
-        filename: 'https://avatars.githubusercontent.com/u/6737785?v=4',
+        filename: require('~/assets/6737785.png'),
         annotations: [
           {
             id: 17,

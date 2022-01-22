@@ -52,6 +52,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'api.apps.ApiConfig',
+    'roles.apps.RolesConfig',
+    'members.apps.MembersConfig',
+    'metrics.apps.MetricsConfig',
+    'users.apps.UsersConfig',
+    'data_import.apps.DataImportConfig',
+    'data_export.apps.DataExportConfig',
+    'auto_labeling.apps.AutoLabelingConfig',
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',
@@ -106,10 +113,6 @@ TEMPLATES = [
                 'social_django.context_processors.backends',
                 'social_django.context_processors.login_redirect',
             ],
-            # 'libraries': {
-            #     'analytics': 'server.templatetags.analytics',
-            #     'utils_templating': 'authentification.templatetags.utils_templating',
-            # },
         },
     },
 ]
@@ -142,7 +145,7 @@ HEADER_AUTH_ADMIN_GROUP_NAME = env('HEADER_AUTH_ADMIN_GROUP_NAME', '')
 HEADER_AUTH_GROUPS_SEPERATOR = env('HEADER_AUTH_GROUPS_SEPERATOR', default=',')
 
 if HEADER_AUTH_USER_NAME and HEADER_AUTH_USER_GROUPS and HEADER_AUTH_ADMIN_GROUP_NAME:
-    MIDDLEWARE.append('server.middleware.HeaderAuthMiddleware')
+    MIDDLEWARE.append('api.middleware.HeaderAuthMiddleware')
     AUTHENTICATION_BACKENDS.append('django.contrib.auth.backends.RemoteUserBackend')
 
 SOCIAL_AUTH_GITHUB_KEY = env('OAUTH_GITHUB_KEY', None)
@@ -188,10 +191,6 @@ SOCIAL_AUTH_PIPELINE = [
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
     'social_core.pipeline.user.user_details',
-    'server.social_auth.fetch_github_permissions',
-    'server.social_auth.fetch_azuread_permissions',
-    'server.social_auth.fetch_okta_oauth2_permissions',
-    'server.social_auth.fetch_okta_openidconnect_permissions',
 ]
 
 ROLE_PROJECT_ADMIN = env('ROLE_PROJECT_ADMIN', 'project_admin')

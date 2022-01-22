@@ -13,7 +13,7 @@
           :value="name"
           :rules="projectNameRules($t('rules.projectNameRules'))"
           :label="$t('overview.projectName')"
-          prepend-icon="mdi-account-multiple"
+          :prepend-icon="mdiAccountMultiple"
           required
           autofocus
           @input="updateValue('name', $event)"
@@ -22,7 +22,7 @@
           :value="description"
           :rules="descriptionRules($t('rules.descriptionRules'))"
           :label="$t('generic.description')"
-          prepend-icon="mdi-clipboard-text"
+          :prepend-icon="mdiClipboardText"
           required
           @input="updateValue('description', $event)"
         />
@@ -31,14 +31,14 @@
           :items="projectTypes"
           :rules="projectTypeRules($t('rules.projectTypeRules'))"
           :label="$t('overview.projectType')"
-          prepend-icon="mdi-keyboard"
+          :prepend-icon="mdiKeyboard"
           required
           @input="updateValue('projectType', $event)"
         >
-          <template v-slot:item="props">
+          <template #item="props">
             {{ translateTypeName(props.item, $t('overview.projectTypes')) }}
           </template>
-          <template v-slot:selection="props">
+          <template #selection="props">
             {{ translateTypeName(props.item, $t('overview.projectTypes')) }}
           </template>
         </v-select>
@@ -48,6 +48,44 @@
           label="Allow single label"
           @change="updateValue('singleClassClassification', $event === true)"
         />
+        <v-checkbox
+          v-if="isSequenceLabelingProject"
+          :value="allowOverlapping"
+          label="Allow overlapping entity"
+          @change="updateValue('allowOverlapping', $event === true)"
+        />
+        <v-img
+          v-if="isSequenceLabelingProject"
+          :src="require('~/assets/project/creation.gif')"
+          height="200"
+          position="left"
+          contain
+        />
+        <v-checkbox
+          v-if="isSequenceLabelingProject"
+          :value="graphemeMode"
+          @change="updateValue('graphemeMode', $event === true)"
+        >
+          <template #label>
+            <div>
+              Count
+              <v-tooltip bottom>
+                <template #activator="{ on }">
+                  <a
+                    target="_blank"
+                    href="https://unicode.org/reports/tr29/"
+                    @click.stop
+                    v-on="on"
+                  >
+                    grapheme clusters
+                  </a>
+                </template>
+                Like emoji(🌷, 💩, and 👍), CRLF(\r\n), and so on.
+              </v-tooltip>
+              as one character
+            </div>
+          </template>
+        </v-checkbox>
         <v-checkbox
           :value="enableRandomOrder"
           :label="$t('overview.randomizeDocOrder')"
@@ -65,6 +103,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import { mdiAccountMultiple, mdiClipboardText, mdiKeyboard } from '@mdi/js'
 import BaseCard from '@/components/utils/BaseCard.vue'
 import { projectNameRules, descriptionRules, projectTypeRules } from '@/rules/index'
 
@@ -103,6 +142,14 @@ export default Vue.extend({
       type: Boolean,
       default: false,
       required: true
+    },
+    allowOverlapping: {
+      type: Boolean,
+      default: false
+    },
+    graphemeMode: {
+      type: Boolean,
+      default: false
     }
   },
 
@@ -111,7 +158,10 @@ export default Vue.extend({
       valid: false,
       projectNameRules,
       projectTypeRules,
-      descriptionRules
+      descriptionRules,
+      mdiAccountMultiple,
+      mdiClipboardText,
+      mdiKeyboard
     }
   },
 
@@ -121,6 +171,7 @@ export default Vue.extend({
         'DocumentClassification',
         'SequenceLabeling',
         'Seq2seq',
+        'IntentDetectionAndSlotFilling',
         'ImageClassification',
         'Speech2text',
       ]
@@ -130,6 +181,9 @@ export default Vue.extend({
         'DocumentClassification',
         'ImageClassification',
       ].includes(this.projectType)
+    },
+    isSequenceLabelingProject() {
+      return this.projectType === 'SequenceLabeling'
     }
   },
 

@@ -10,10 +10,10 @@
       class="elevation-1"
       @input="update"
     >
-      <template v-slot:top>
+      <template #top>
         <v-text-field
           v-model="newText"
-          prepend-inner-icon="mdi-pencil"
+          :prepend-inner-icon="mdiPencil"
           :label="$t('annotation.newText')"
           autofocus
           single-line
@@ -24,12 +24,12 @@
           @compositionend="compositionEnd"
         />
       </template>
-      <template v-slot:[`item.text`]="{ item }">
+      <template #[`item.text`]="{ item }">
         <v-edit-dialog>
           <span class="title" style="font-weight:400">
             {{ item.text }}
           </span>
-          <template v-slot:input>
+          <template #input>
             <v-textarea
               :value="item.text"
               :label="$t('generic.edit')"
@@ -39,12 +39,12 @@
           </template>
         </v-edit-dialog>
       </template>
-      <template v-slot:[`item.action`]="{ item }">
+      <template #[`item.action`]="{ item }">
         <v-icon
           small
           @click="remove(item.id)"
         >
-          mdi-delete-outline
+          {{ mdiDeleteOutline }}
         </v-icon>
       </template>
     </v-data-table>
@@ -53,6 +53,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import { mdiPencil, mdiDeleteOutline } from '@mdi/js'
 
 export default Vue.extend({
   props: {
@@ -79,7 +80,9 @@ export default Vue.extend({
         }
       ],
       isComposing: false,
-      hasCompositionJustEnded: false
+      hasCompositionJustEnded: false,
+      mdiPencil,
+      mdiDeleteOutline
     }
   },
 

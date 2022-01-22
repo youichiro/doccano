@@ -1,242 +1,166 @@
 from django.urls import include, path
 
-from . import views
+from .views import (annotation, comment, example, example_state, health, label,
+                    project, tag, task)
+from .views.tasks import category, relation, span, text
 
 urlpatterns_project = [
     path(
-        route='upload',
-        view=views.UploadAPI.as_view(),
-        name='upload'
+        route='category-types',
+        view=label.CategoryTypeList.as_view(),
+        name='category_types'
     ),
     path(
-        route='catalog',
-        view=views.DatasetCatalog.as_view(),
-        name='catalog'
+        route='category-types/<int:label_id>',
+        view=label.CategoryTypeDetail.as_view(),
+        name='category_type'
     ),
     path(
-        route='download-format',
-        view=views.DownloadDatasetCatalog.as_view(),
-        name='download-format'
+        route='span-types',
+        view=label.SpanTypeList.as_view(),
+        name='span_types'
     ),
     path(
-        route='download',
-        view=views.DownloadAPI.as_view(),
-        name='download-dataset'
+        route='span-types/<int:label_id>',
+        view=label.SpanTypeDetail.as_view(),
+        name='span_type'
     ),
     path(
-        route='statistics',
-        view=views.StatisticsAPI.as_view(),
-        name='statistics'),
-    path(
-        route='labels',
-        view=views.LabelList.as_view(),
-        name='label_list'
+        route='category-type-upload',
+        view=label.CategoryTypeUploadAPI.as_view(),
+        name='category_type_upload'
     ),
     path(
-        route='label-upload',
-        view=views.LabelUploadAPI.as_view(),
-        name='label_upload'
-    ),
-    path(
-        route='labels/<int:label_id>',
-        view=views.LabelDetail.as_view(),
-        name='label_detail'
+        route='span-type-upload',
+        view=label.SpanTypeUploadAPI.as_view(),
+        name='span_type_upload'
     ),
     path(
         route='examples',
-        view=views.ExampleList.as_view(),
+        view=example.ExampleList.as_view(),
         name='example_list'
     ),
     path(
         route='examples/<int:example_id>',
-        view=views.ExampleDetail.as_view(),
+        view=example.ExampleDetail.as_view(),
         name='example_detail'
     ),
     path(
         route='relation_types',
-        view=views.RelationTypesList.as_view(),
+        view=label.RelationTypeList.as_view(),
         name='relation_types_list'
     ),
     path(
         route='relation_type-upload',
-        view=views.RelationTypesUploadAPI.as_view(),
+        view=label.RelationTypeUploadAPI.as_view(),
         name='relation_type-upload'
     ),
     path(
         route='relation_types/<int:relation_type_id>',
-        view=views.RelationTypesDetail.as_view(),
+        view=label.RelationTypeDetail.as_view(),
         name='relation_type_detail'
     ),
     path(
         route='annotation_relations',
-        view=views.AnnotationRelationsList.as_view(),
+        view=relation.RelationList.as_view(),
         name='relation_types_list'
     ),
     path(
         route='annotation_relation-upload',
-        view=views.AnnotationRelationsUploadAPI.as_view(),
+        view=relation.RelationUploadAPI.as_view(),
         name='annotation_relation-upload'
     ),
     path(
         route='annotation_relations/<int:annotation_relation_id>',
-        view=views.AnnotationRelationsDetail.as_view(),
+        view=relation.RelationDetail.as_view(),
         name='annotation_relation_detail'
-    ),
-    # Todo: remove.
-    path(
-        route='docs',
-        view=views.DocumentList.as_view(),
-        name='doc_list'
-    ),
-    path(
-        route='docs/<int:doc_id>',
-        view=views.DocumentDetail.as_view(),
-        name='doc_detail'
     ),
     path(
         route='approval/<int:example_id>',
-        view=views.ApprovalAPI.as_view(),
+        view=annotation.ApprovalAPI.as_view(),
         name='approve_labels'
     ),
-    # Todo: change.
     path(
-        route='docs/<int:doc_id>/annotations',
-        view=views.AnnotationList.as_view(),
-        name='annotation_list'
+        route='examples/<int:example_id>/categories',
+        view=category.CategoryListAPI.as_view(),
+        name='category_list'
     ),
     path(
-        route='docs/<int:doc_id>/annotations/<int:annotation_id>',
-        view=views.AnnotationDetail.as_view(),
-        name='annotation_detail'
+        route='examples/<int:example_id>/categories/<int:annotation_id>',
+        view=category.CategoryDetailAPI.as_view(),
+        name='category_detail'
+    ),
+    path(
+        route='examples/<int:example_id>/spans',
+        view=span.SpanListAPI.as_view(),
+        name='span_list'
+    ),
+    path(
+        route='examples/<int:example_id>/spans/<int:annotation_id>',
+        view=span.SpanDetailAPI.as_view(),
+        name='span_detail'
+    ),
+    path(
+        route='examples/<int:example_id>/texts',
+        view=text.TextLabelListAPI.as_view(),
+        name='text_list'
+    ),
+    path(
+        route='examples/<int:example_id>/texts/<int:annotation_id>',
+        view=text.TextLabelDetailAPI.as_view(),
+        name='text_detail'
     ),
     path(
         route='tags',
-        view=views.TagList.as_view(),
+        view=tag.TagList.as_view(),
         name='tag_list'
     ),
     path(
         route='tags/<int:tag_id>',
-        view=views.TagDetail.as_view(),
+        view=tag.TagDetail.as_view(),
         name='tag_detail'
     ),
     path(
         route='examples/<int:example_id>/comments',
-        view=views.CommentListDoc.as_view(),
+        view=comment.CommentListDoc.as_view(),
         name='comment_list_doc'
     ),
     path(
         route='comments',
-        view=views.CommentListProject.as_view(),
+        view=comment.CommentListProject.as_view(),
         name='comment_list_project'
     ),
     path(
         route='examples/<int:example_id>/comments/<int:comment_id>',
-        view=views.CommentDetail.as_view(),
+        view=comment.CommentDetail.as_view(),
         name='comment_detail'
     ),
     path(
       route='examples/<int:example_id>/states',
-      view=views.ExampleStateList.as_view(),
+      view=example_state.ExampleStateList.as_view(),
       name='example_state_list'
     ),
-    path(
-        route='roles',
-        view=views.RoleMappingList.as_view(),
-        name='rolemapping_list'
-    ),
-    path(
-        route='roles/<int:rolemapping_id>',
-        view=views.RoleMappingDetail.as_view(),
-        name='rolemapping_detail'
-    ),
-    path(
-        route='auto-labeling-templates',
-        view=views.AutoLabelingTemplateListAPI.as_view(),
-        name='auto_labeling_templates'
-    ),
-    path(
-        route='auto-labeling-templates/<str:option_name>',
-        view=views.AutoLabelingTemplateDetailAPI.as_view(),
-        name='auto_labeling_template'
-    ),
-    path(
-        route='auto-labeling-configs',
-        view=views.AutoLabelingConfigList.as_view(),
-        name='auto_labeling_configs'
-    ),
-    path(
-        route='auto-labeling-configs/<int:config_id>',
-        view=views.AutoLabelingConfigDetail.as_view(),
-        name='auto_labeling_config'
-    ),
-    path(
-        route='auto-labeling-config-testing',
-        view=views.AutoLabelingConfigTest.as_view(),
-        name='auto_labeling_config_test'
-    ),
-    path(
-        route='examples/<int:example_id>/auto-labeling',
-        view=views.AutoLabelingAnnotation.as_view(),
-        name='auto_labeling_annotation'
-    ),
-    path(
-        route='auto-labeling-parameter-testing',
-        view=views.AutoLabelingConfigParameterTest.as_view(),
-        name='auto_labeling_parameter_testing'
-    ),
-    path(
-        route='auto-labeling-template-testing',
-        view=views.AutoLabelingTemplateTest.as_view(),
-        name='auto_labeling_template_test'
-    ),
-    path(
-        route='auto-labeling-mapping-testing',
-        view=views.AutoLabelingMappingTest.as_view(),
-        name='auto_labeling_mapping_test'
-    )
 ]
 
 urlpatterns = [
     path(
         route='health',
-        view=views.Health.as_view(),
+        view=health.Health.as_view(),
         name='health'
-    ),
-    path('auth/', include('dj_rest_auth.urls')),
-    path('fp/', include('django_drf_filepond.urls')),
-    path(
-        route='me',
-        view=views.Me.as_view(),
-        name='me'
-    ),
-    path(
-        route='features',
-        view=views.Features.as_view(),
-        name='features'
     ),
     path(
         route='projects',
-        view=views.ProjectList.as_view(),
+        view=project.ProjectList.as_view(),
         name='project_list'
     ),
     path(
-        route='users',
-        view=views.Users.as_view(),
-        name='user_list'
-    ),
-    path(
-        route='roles',
-        view=views.Roles.as_view(),
-        name='roles'
-    ),
-    path(
         route='tasks/status/<task_id>',
-        view=views.TaskStatus.as_view(),
+        view=task.TaskStatus.as_view(),
         name='task_status'
     ),
     path(
         route='projects/<int:project_id>',
-        view=views.ProjectDetail.as_view(),
+        view=project.ProjectDetail.as_view(),
         name='project_detail'
     ),
     path('projects/<int:project_id>/', include(urlpatterns_project))

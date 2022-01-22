@@ -3,21 +3,29 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from members.permissions import IsInProjectReadOnlyOrAdmin
+
 from ..models import Project
-from ..permissions import IsInProjectReadOnlyOrAdmin
-from ..serializers import ProjectPolymorphicSerializer, ProjectSerializer
+from ..permissions import IsStaff
+from ..serializers import ProjectPolymorphicSerializer
 
 
 class ProjectList(generics.ListCreateAPIView):
     serializer_class = ProjectPolymorphicSerializer
     pagination_class = None
-    permission_classes = [IsAuthenticated, ]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            self.permission_classes = [IsAuthenticated, ]
+        else:
+            self.permission_classes = [IsAuthenticated & IsStaff]
+        return super().get_permissions()
 
     def get_queryset(self):
-        return self.request.user.projects
+        return Project.objects.filter(role_mappings__user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(users=[self.request.user])
+        serializer.save(created_by=self.request.user)
 
     def delete(self, request, *args, **kwargs):
         delete_ids = request.data['ids']
@@ -36,6 +44,6 @@ class ProjectList(generics.ListCreateAPIView):
 
 class ProjectDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
+    serializer_class = ProjectPolymorphicSerializer
     lookup_url_kwarg = 'project_id'
     permission_classes = [IsAuthenticated & IsInProjectReadOnlyOrAdmin]

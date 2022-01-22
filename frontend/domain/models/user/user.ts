@@ -1,22 +1,21 @@
-export class UserItem {
-  constructor(
-    public id: number,
-    public username: string,
-    public is_superuser: boolean
-  ) {}
+import { Expose } from 'class-transformer'
 
-  static valueOf(
-    { id, username, is_superuser }:
-    { id: number, username: string, is_superuser: boolean }
-  ): UserItem {
-    return new UserItem(id, username, is_superuser)
-  }
+export class UserItem {
+  id: number;
+  username: string;
+  
+  @Expose({ name: 'is_superuser' })
+  isSuperuser: boolean;
+
+  @Expose({ name: 'is_staff' })
+  isStaff: boolean;
 
   toObject(): Object {
     return {
       id: this.id,
       username: this.username,
-      is_superuser: this.is_superuser
+      is_superuser: this.isSuperuser,
+      is_staff: this.isStaff
     }
   }
 }

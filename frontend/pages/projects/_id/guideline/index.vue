@@ -1,9 +1,11 @@
 <template>
   <editor
-    v-model="project.guideline"
+    ref="toastuiEditor"
+    :initial-value="project.guideline"
+    :options="editorOptions"
     preview-style="vertical"
     height="inherit"
-    :options="editorOptions"
+    @change="updateProject"
   />
 </template>
 
@@ -16,10 +18,15 @@ import { Editor } from '@toast-ui/vue-editor'
 import '@/assets/style/editor.css'
 
 export default {
-  layout: 'project',
 
   components: {
     Editor
+  },
+
+  layout: 'project',
+
+  validate({ params }) {
+    return /^\d+$/.test(params.id)
   },
 
   data() {
@@ -27,29 +34,25 @@ export default {
       editorOptions: {
         language: this.$t('toastui.localeCode')
       },
-      project: {}
+      project: {},
+      mounted: false,
     }
   },
 
-  watch: {
-    'project.guideline'() {
-      this.updateProject()
-    }
-  },
-
-  async created() {
+  async mounted() {
     const projectId = this.$route.params.id
     this.project = await this.$services.project.findById(projectId)
+    this.$refs.toastuiEditor.invoke('setMarkdown', this.project.guideline)
+    this.mounted = true
   },
 
   methods: {
     updateProject: _.debounce(function() {
-      this.$services.project.update(this.project)
+      if (this.mounted) {
+        this.project.guideline = this.$refs.toastuiEditor.invoke('getMarkdown')
+        this.$services.project.update(this.project)
+      }
     }, 1000)
-  },
-
-  validate({ params }) {
-    return /^\d+$/.test(params.id)
   }
 }
 </script>

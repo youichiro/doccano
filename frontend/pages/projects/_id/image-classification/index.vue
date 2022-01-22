@@ -1,12 +1,11 @@
 <template>
   <layout-text v-if="image.id">
-    <template v-slot:header>
+    <template #header>
       <toolbar-laptop
         :doc-id="image.id"
         :enable-auto-labeling.sync="enableAutoLabeling"
         :guideline-text="project.guideline"
         :is-reviewd="image.isConfirmed"
-        :show-approve-button="project.permitApprove"
         :total="images.count"
         class="d-none d-sm-block"
         @click:clear-label="clear"
@@ -18,10 +17,10 @@
           class="ms-2"
         >
           <v-btn icon>
-            <v-icon>mdi-format-list-bulleted</v-icon>
+            <v-icon>{{ mdiFormatListBulleted }}</v-icon>
           </v-btn>
           <v-btn icon>
-            <v-icon>mdi-text</v-icon>
+            <v-icon>{{ mdiText }}</v-icon>
           </v-btn>
         </v-btn-toggle>
       </toolbar-laptop>
@@ -30,7 +29,7 @@
         class="d-flex d-sm-none"
       />
     </template>
-    <template v-slot:content>
+    <template #content>
       <v-card
         v-shortkey="shortKeys"
         @shortkey="addOrRemove"
@@ -62,7 +61,7 @@
         />
       </v-card>
     </template>
-    <template v-slot:sidebar>
+    <template #sidebar>
       <list-metadata :metadata="image.meta" />
     </template>
   </layout-text>
@@ -70,7 +69,8 @@
 
 <script>
 import _ from 'lodash'
-import { toRefs } from '@nuxtjs/composition-api'
+import { mdiText, mdiFormatListBulleted } from '@mdi/js'
+import { toRefs, useContext } from '@nuxtjs/composition-api'
 import LabelGroup from '@/components/tasks/textClassification/LabelGroup'
 import LabelSelect from '@/components/tasks/textClassification/LabelSelect'
 import LayoutText from '@/components/tasks/layout/LayoutText'
@@ -80,7 +80,6 @@ import ToolbarMobile from '@/components/tasks/toolbar/ToolbarMobile'
 import { useLabelList } from '@/composables/useLabelList'
 
 export default {
-  layout: 'workspace',
 
   components: {
     LabelGroup,
@@ -90,14 +89,36 @@ export default {
     ToolbarLaptop,
     ToolbarMobile
   },
+  layout: 'workspace',
+
+  validate({ params, query }) {
+    return /^\d+$/.test(params.id) && /^\d+$/.test(query.page)
+  },
 
   setup() {
-    const { state, getLabelList, shortKeys } = useLabelList()
+    const { app } = useContext()
+    const { state, getLabelList, shortKeys } = useLabelList(app.$services.categoryType)
 
     return {
       ...toRefs(state),
       getLabelList,
       shortKeys,
+    }
+  },
+
+  data() {
+    return {
+      annotations: [],
+      images: [],
+      project: {},
+      enableAutoLabeling: false,
+      labelOption: 0,
+      imageSize: {
+        height: 0,
+        width: 0
+      },
+      mdiText,
+      mdiFormatListBulleted
     }
   },
 
@@ -114,20 +135,6 @@ export default {
       await this.autoLabel(image.id)
     }
     await this.list(image.id)
-  },
-
-  data() {
-    return {
-      annotations: [],
-      images: [],
-      project: {},
-      enableAutoLabeling: false,
-      labelOption: 0,
-      imageSize: {
-        height: 0,
-        width: 0
-      }
-    }
   },
 
   computed: {
@@ -209,10 +216,6 @@ export default {
       }
       img.src = val.url
     }
-  },
-
-  validate({ params, query }) {
-    return /^\d+$/.test(params.id) && /^\d+$/.test(query.page)
   }
 }
 </script>

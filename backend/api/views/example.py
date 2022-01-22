@@ -7,9 +7,10 @@ from rest_framework import filters, generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ..filters import DocumentFilter, ExampleFilter
+from members.permissions import IsInProjectReadOnlyOrAdmin
+
+from ..filters import ExampleFilter
 from ..models import Example, Project
-from ..permissions import IsInProjectReadOnlyOrAdmin
 from ..serializers import ExampleSerializer
 
 
@@ -34,7 +35,7 @@ class ExampleList(generics.ListCreateAPIView):
             value = random.randrange(2, 20)
             queryset = queryset.annotate(sort_id=F('id') % value).order_by('sort_id', 'id')
         else:
-            queryset = queryset.order_by('id')
+            queryset = queryset.order_by('created_at')
         return queryset
 
     def perform_create(self, serializer):
@@ -54,16 +55,4 @@ class ExampleDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Example.objects.all()
     serializer_class = ExampleSerializer
     lookup_url_kwarg = 'example_id'
-    permission_classes = [IsAuthenticated & IsInProjectReadOnlyOrAdmin]
-
-
-class DocumentList(ExampleList):
-    search_fields = ('text',)
-    filter_class = DocumentFilter
-
-
-class DocumentDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Example.objects.all()
-    serializer_class = ExampleSerializer
-    lookup_url_kwarg = 'doc_id'
     permission_classes = [IsAuthenticated & IsInProjectReadOnlyOrAdmin]

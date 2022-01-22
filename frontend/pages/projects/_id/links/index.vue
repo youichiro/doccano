@@ -49,7 +49,6 @@ import { LinkTypeDTO } from '~/services/application/links/linkData'
 import { ProjectDTO } from '~/services/application/project/projectData'
 
 export default Vue.extend({
-  layout: 'project',
 
   components: {
     ActionMenu,
@@ -57,11 +56,16 @@ export default Vue.extend({
     FormDelete,
     LinksList
   },
+  layout: 'project',
 
-  async fetch() {
-    this.isLoading = true
-    this.items = await this.$services.linkTypes.list(this.projectId)
-    this.isLoading = false
+  validate({ params, app }) {
+    if (/^\d+$/.test(params.id)) {
+      return app.$services.project.findById(params.id)
+      .then((res:ProjectDTO) => {
+        return res.canDefineRelation
+      })
+    }
+    return false
   },
 
   data() {
@@ -71,11 +75,11 @@ export default Vue.extend({
       dialogUpload: false,
       editedIndex: -1,
       editedItem: {
-        name: '',
+        text: '',
         color: '#ffffff'
       } as LinkTypeDTO,
       defaultItem: {
-        name: '',
+        text: '',
         color: '#ffffff'
       } as LinkTypeDTO,
       items: [] as LinkTypeDTO[],
@@ -83,6 +87,12 @@ export default Vue.extend({
       isLoading: false,
       errorMessage: ''
     }
+  },
+
+  async fetch() {
+    this.isLoading = true
+    this.items = await this.$services.linkTypes.list(this.projectId)
+    this.isLoading = false
   },
 
   computed: {
@@ -94,7 +104,7 @@ export default Vue.extend({
     },
     usedNames(): string[] {
       const item = this.items[this.editedIndex] // to remove myself
-      return this.items.filter(_ => _ !== item).map(item => item.name)
+      return this.items.filter(_ => _ !== item).map(item => item.text)
     }
   },
 
@@ -141,16 +151,6 @@ export default Vue.extend({
       this.editedItem = Object.assign({}, item)
       this.dialogCreate = true
     }
-  },
-
-  validate({ params, app }) {
-    if (/^\d+$/.test(params.id)) {
-      return app.$services.project.findById(params.id)
-      .then((res:ProjectDTO) => {
-        return res.canDefineRelation
-      })
-    }
-    return false
   }
 })
 </script>

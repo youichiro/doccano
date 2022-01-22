@@ -8,7 +8,7 @@
               <label-group
                 :labels="items"
                 :annotations="currentDoc.annotations"
-                single-label="true"
+                :single-label="singleLabel"
                 @add="addLabel"
                 @remove="removeLabel"
               />
@@ -32,15 +32,16 @@ import ListMetadata from '@/components/tasks/metadata/ListMetadata'
 import LabelGroup from '@/components/tasks/textClassification/LabelGroup'
 
 export default {
-  layout: 'demo',
 
   components: {
     LabelGroup,
     ListMetadata
   },
+  layout: 'demo',
 
   data() {
     return {
+      singleLabel: true,
       items: [
         {
           id: 4,

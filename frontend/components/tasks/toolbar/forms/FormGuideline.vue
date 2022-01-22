@@ -6,7 +6,7 @@
   >
     <template #content>
       <viewer
-        :value="guidelineText"
+        :initial-value="guidelineText"
       />
     </template>
   </base-card>

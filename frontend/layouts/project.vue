@@ -14,7 +14,7 @@
     >
       <the-side-bar
         :link="getLink"
-        :role="getCurrentUserRole"
+        :is-project-admin="isProjectAdmin"
         :project="currentProject"
       />
     </v-navigation-drawer>
@@ -42,21 +42,27 @@ import TheSideBar from '~/components/layout/TheSideBar'
 import TheHeader from '~/components/layout/TheHeader'
 
 export default {
-  middleware: ['check-auth', 'auth', 'check-admin'],
 
   components: {
     TheSideBar,
     TheHeader
   },
+  middleware: ['check-auth', 'auth', 'check-admin'],
 
   data() {
     return {
-      drawerLeft: null
+      drawerLeft: null,
+      isProjectAdmin: false,
     }
   },
 
   computed: {
-    ...mapGetters('projects', ['getLink', 'getCurrentUserRole', 'currentProject'])
+    ...mapGetters('projects', ['getLink', 'currentProject']),
+    ...mapGetters('auth', ['getUserId'])
+  },
+
+  async created() {
+    this.isProjectAdmin = await this.$services.member.isProjectAdmin(this.$route.params.id, this.getUserId)
   }
 }
 </script>

@@ -3,12 +3,12 @@
     :headers="headers"
     :items="value"
   >
-    <template v-slot:top>
+    <template #top>
       <v-dialog
         v-model="dialog"
         max-width="800px"
       >
-        <template v-slot:activator="{ on, attrs }">
+        <template #activator="{ on, attrs }">
           <v-btn
             color="primary"
             dark
@@ -84,19 +84,19 @@
         </v-card>
       </v-dialog>
     </template>
-    <template v-slot:[`item.actions`]="{ item }">
+    <template #[`item.actions`]="{ item }">
       <v-icon
         small
         class="mr-2"
         @click="editItem(item)"
       >
-        mdi-pencil
+        {{ mdiPencil }}
       </v-icon>
       <v-icon
         small
         @click="deleteItem(item)"
       >
-        mdi-delete
+        {{ mdiDelete }}
       </v-icon>
     </template>
   </v-data-table>
@@ -104,6 +104,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import { mdiPencil, mdiDelete } from '@mdi/js'
 import { labelNameRules } from '@/rules/index'
 
 export default Vue.extend({
@@ -147,13 +148,21 @@ export default Vue.extend({
         'to': ''
       },
       items: [] as string[],
-      labelNameRules
+      labelNameRules,
+      mdiPencil,
+      mdiDelete
     }
   },
 
   async created() {
-    const labels = await this.$services.label.list(this.$route.params.id)
-    this.items = labels.map(item => item.text)
+    const project = await this.$services.project.findById(this.$route.params.id)
+    if (project.projectType.endsWith('Classification')) {
+      const labels = await this.$services.categoryType.list(this.$route.params.id)
+      this.items = labels.map(item => item.text)
+    } else {
+      const labels = await this.$services.spanType.list(this.$route.params.id)
+      this.items = labels.map(item => item.text)
+    }
   },
 
   methods: {

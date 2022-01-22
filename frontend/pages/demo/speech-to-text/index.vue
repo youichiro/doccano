@@ -5,7 +5,7 @@
         <v-col cols="12" md="9">
           <audio
             controls
-            src="~/assets/examples/speech_1.mp3"
+            :src="src"
             class="mt-2 mb-5"
             style="width:100%;"
           >
@@ -33,12 +33,12 @@ import ListMetadata from '@/components/tasks/metadata/ListMetadata'
 import Seq2seqBox from '~/components/tasks/seq2seq/Seq2seqBox'
 
 export default {
-  layout: 'demo',
 
   components: {
     Seq2seqBox,
     ListMetadata
   },
+  layout: 'demo',
 
   data() {
     return {
@@ -57,7 +57,8 @@ export default {
           url: 'https://github.com/doccano'
         },
         annotation_approver: null
-      }
+      },
+      src: require('~/assets/examples/speech_1.mp3').default
     }
   },
 

@@ -3,8 +3,10 @@ from rest_framework import filters, generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from members.permissions import IsInProjectOrAdmin
+
 from ..models import Comment
-from ..permissions import IsInProjectOrAdmin, IsOwnComment
+from ..permissions import IsOwnComment
 from ..serializers import CommentSerializer
 
 
@@ -26,7 +28,6 @@ class CommentListDoc(generics.ListCreateAPIView):
 
 
 class CommentListProject(generics.ListAPIView):
-    pagination_class = None
     permission_classes = [IsAuthenticated & IsInProjectOrAdmin]
     serializer_class = CommentSerializer
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)

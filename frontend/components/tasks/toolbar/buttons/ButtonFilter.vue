@@ -1,14 +1,14 @@
 <template>
   <v-menu>
-    <template v-slot:activator="{ on: menu }">
+    <template #activator="{ on: menu }">
       <v-tooltip bottom>
-        <template v-slot:activator="{ on: tooltip }">
+        <template #activator="{ on: tooltip }">
           <v-btn
             icon
             v-on="{ ...tooltip, ...menu }"
           >
             <v-icon>
-              mdi-filter
+              {{ mdiFilter }}
             </v-icon>
           </v-btn>
         </template>
@@ -23,7 +23,7 @@
         >
           <v-list-item-icon>
             <v-icon v-if="selected === i">
-              mdi-check
+              {{ mdiCheck }}
             </v-icon>
           </v-list-item-icon>
           <v-list-item-content>
@@ -38,6 +38,8 @@
 </template>
 
 <script>
+import { mdiFilter, mdiCheck } from '@mdi/js'
+
 export default {
   props: {
     value: {
@@ -53,7 +55,9 @@ export default {
         { title: this.$t('annotation.filterOption1'), param: '' },
         { title: this.$t('annotation.filterOption2'), param: 'true' },
         { title: this.$t('annotation.filterOption3'), param: 'false' }
-      ]
+      ],
+      mdiFilter,
+      mdiCheck
     }
   },
 

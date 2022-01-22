@@ -1,6 +1,6 @@
 <template>
   <v-card>
-    <v-card-title>
+    <v-card-title v-if="isProjectAdmin">
       <action-menu
         @upload="upload"
         @download="dialogDownload=true"
@@ -74,6 +74,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import { mapGetters } from 'vuex'
 import _ from 'lodash'
 import DocumentList from '@/components/example/DocumentList.vue'
 import FormDelete from '@/components/example/FormDelete.vue'
@@ -86,7 +87,6 @@ import ActionMenu from '~/components/example/ActionMenu.vue'
 import { ProjectDTO } from '~/services/application/project/projectData'
 
 export default Vue.extend({
-  layout: 'project',
 
   components: {
     ActionMenu,
@@ -98,10 +98,11 @@ export default Vue.extend({
     FormDownload,
   },
 
-  async fetch() {
-    this.isLoading = true
-    this.item = await this.$services.example.list(this.projectId, this.$route.query)
-    this.isLoading = false
+  layout: 'project',
+
+  validate({ params, query }) {
+    // @ts-ignore
+    return /^\d+$/.test(params.id) && /^\d+|$/.test(query.limit) && /^\d+|$/.test(query.offset)
   },
 
   data() {
@@ -112,8 +113,15 @@ export default Vue.extend({
       project: {} as ProjectDTO,
       item: {} as ExampleListDTO,
       selected: [] as ExampleDTO[],
-      isLoading: false
+      isLoading: false,
+      isProjectAdmin: false
     }
+  },
+
+  async fetch() {
+    this.isLoading = true
+    this.item = await this.$services.example.list(this.projectId, this.$route.query)
+    this.isLoading = false
   },
 
   computed: {
@@ -135,7 +143,8 @@ export default Vue.extend({
       } else {
         return 'text'
       }
-    }
+    },
+    ...mapGetters('auth', ['getUserId'])
   },
 
   watch: {
@@ -148,6 +157,7 @@ export default Vue.extend({
 
   async created() {
     this.project = await this.$services.project.findById(this.projectId)
+    this.isProjectAdmin = await this.$services.member.isProjectAdmin(this.projectId, this.getUserId)
   },
 
   methods: {
@@ -175,11 +185,6 @@ export default Vue.extend({
         query
       })
     }
-  },
-
-  validate({ params, query }) {
-    // @ts-ignore
-    return /^\d+$/.test(params.id) && /^\d+|$/.test(query.limit) && /^\d+|$/.test(query.offset)
   }
 })
 </script>

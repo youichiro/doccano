@@ -1,6 +1,6 @@
 <template>
   <v-card>
-    <v-card-title>
+    <v-card-title v-if="isStaff">
       <v-btn
         class="text-capitalize"
         color="primary"
@@ -41,27 +41,22 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import { mapGetters } from 'vuex'
 import ProjectList from '@/components/project/ProjectList.vue'
 import { ProjectDTO, ProjectWriteDTO } from '~/services/application/project/projectData'
 import FormDelete from '~/components/project/FormDelete.vue'
 import FormCreate from '~/components/project/FormCreate.vue'
 
 export default Vue.extend({
-  layout: 'projects',
-
-  middleware: ['check-auth', 'auth'],
 
   components: {
     FormCreate,
     FormDelete,
     ProjectList,
   },
+  layout: 'projects',
 
-  async fetch() {
-    this.isLoading = true
-    this.items = await this.$services.project.list()
-    this.isLoading = false
-  },
+  middleware: ['check-auth', 'auth'],
 
   data() {
     return {
@@ -73,7 +68,9 @@ export default Vue.extend({
         projectType: 'DocumentClassification',
         enableRandomOrder: false,
         enableShareAnnotation: false,
-        singleClassClassification: false
+        singleClassClassification: false,
+        allowOverlapping: false,
+        graphemeMode: false
       } as ProjectWriteDTO,
       defaultItem: {
         name: '',
@@ -81,7 +78,9 @@ export default Vue.extend({
         projectType: 'DocumentClassification',
         enableRandomOrder: false,
         enableShareAnnotation: false,
-        singleClassClassification: false
+        singleClassClassification: false,
+        allowOverlapping: false,
+        graphemeMode: false
       } as ProjectWriteDTO,
       items: [] as ProjectDTO[],
       selected: [] as ProjectDTO[],
@@ -89,7 +88,14 @@ export default Vue.extend({
     }
   },
 
+  async fetch() {
+    this.isLoading = true
+    this.items = await this.$services.project.list()
+    this.isLoading = false
+  },
+
   computed: {
+    ...mapGetters('auth', ['isStaff']),
     canDelete(): boolean {
       return this.selected.length > 0
     },

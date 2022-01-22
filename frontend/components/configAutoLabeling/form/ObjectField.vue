@@ -3,7 +3,7 @@
     :headers="headers"
     :items="value"
   >
-    <template v-slot:top>
+    <template #top>
       <v-toolbar
         class="toolbar-control"
         flat
@@ -16,7 +16,7 @@
           v-model="dialog"
           max-width="800px"
         >
-          <template v-slot:activator="{ on, attrs }">
+          <template #activator="{ on, attrs }">
             <v-btn
               color="primary"
               dark
@@ -90,19 +90,19 @@
         </v-dialog>
       </v-toolbar>
     </template>
-    <template v-slot:[`item.actions`]="{ item }">
+    <template #[`item.actions`]="{ item }">
       <v-icon
         small
         class="mr-2"
         @click="editItem(item)"
       >
-        mdi-pencil
+        {{ mdiPencil }}
       </v-icon>
       <v-icon
         small
         @click="deleteItem(item)"
       >
-        mdi-delete
+        {{ mdiDelete }}
       </v-icon>
     </template>
   </v-data-table>
@@ -110,6 +110,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import { mdiPencil, mdiDelete } from '@mdi/js'
 
 export default Vue.extend({
 
@@ -158,6 +159,8 @@ export default Vue.extend({
         'value': ''
       },
       items: [] as string[],
+      mdiPencil,
+      mdiDelete
     }
   },
 

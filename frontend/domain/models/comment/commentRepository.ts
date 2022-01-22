@@ -1,17 +1,9 @@
-import { CommentItem } from '~/domain/models/comment/comment'
+import { CommentItem, CommentItemList } from '~/domain/models/comment/comment'
 
-export interface CommentItemResponse {
-  id: number,
-  user: number,
-  username: string,
-  document: number,
-  document_text: string,
-  text: string,
-  created_at: string
-}
+export type SearchOption = {[key: string]: string | (string | null)[]}
 
 export interface CommentRepository {
-  listAll(projectId: string, q: string): Promise<CommentItem[]>
+  listAll(projectId: string, { limit, offset, q }: SearchOption): Promise<CommentItemList>
 
   list(projectId: string, docId: number): Promise<CommentItem[]>
 

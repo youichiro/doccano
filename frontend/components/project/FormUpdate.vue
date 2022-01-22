@@ -113,11 +113,11 @@
               @click:close="removeTag(tag.id)">{{tag.text}}
             </v-chip>
             <v-text-field
-            v-model="tagInput"
-            clearable
-            prepend-icon="add_circle"
-            @keyup.enter="addTag()"
-            @click:prepend="addTag()">
+              v-model="tagInput"
+              clearable
+              :prepend-icon="mdiPlusCircle"
+              @keyup.enter="addTag()"
+              @click:prepend="addTag()">
             </v-text-field>
           </v-col>
         </v-row>
@@ -151,13 +151,10 @@
 </template>
 
 <script>
+import { mdiPlusCircle } from '@mdi/js'
 import { projectNameRules, descriptionRules } from '@/rules/index'
 
 export default {
-  async fetch() {
-    this.project = await this.$services.project.findById(this.projectId)
-    this.getTags()
-  },
 
   data() {
     return {
@@ -171,8 +168,13 @@ export default {
       },
       projectNameRules,
       descriptionRules,
-      valid: false
+      valid: false,
+      mdiPlusCircle
     }
+  },
+  async fetch() {
+    this.project = await this.$services.project.findById(this.projectId)
+    this.getTags()
   },
 
   computed: {

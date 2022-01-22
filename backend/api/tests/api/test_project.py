@@ -39,22 +39,52 @@ class TestProjectCreate(CRUDMixin):
             'resourcetype': 'TextClassificationProject'
         }
 
-    def test_allow_authenticated_user_to_create_project(self):
+    def test_allows_staff_user_to_create_project(self):
+        self.user.is_staff = True
+        self.user.save()
         response = self.assert_create(self.user, status.HTTP_201_CREATED)
         self.assertEqual(response.data['name'], self.data['name'])
 
-    def test_disallow_unauthenticated_user_to_create_project(self):
+    def test_disallows_non_staff_user_to_create_project(self):
+        self.assert_create(self.user, status.HTTP_403_FORBIDDEN)
+
+    def test_disallows_unauthenticated_user_to_create_project(self):
         self.assert_create(expected=status.HTTP_403_FORBIDDEN)
+
+
+class TestSequenceLabelingProjectCreation(CRUDMixin):
+
+    @classmethod
+    def setUpTestData(cls):
+        create_default_roles()
+        cls.user = make_user()
+        cls.url = reverse(viewname='project_list')
+        cls.data = {
+            'name': 'example',
+            'project_type': 'SequenceLabeling',
+            'description': 'example',
+            'guideline': 'example',
+            'allow_overlapping': True,
+            'grapheme_mode': True,
+            'resourcetype': 'SequenceLabelingProject'
+        }
+
+    def test_allows_staff_user_to_create_project(self):
+        self.user.is_staff = True
+        self.user.save()
+        response = self.assert_create(self.user, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['allow_overlapping'], self.data['allow_overlapping'])
+        self.assertEqual(response.data['grapheme_mode'], self.data['grapheme_mode'])
 
 
 class TestProjectDetailAPI(CRUDMixin):
 
     @classmethod
     def setUpTestData(cls):
-        cls.project = prepare_project()
+        cls.project = prepare_project('SequenceLabeling')
         cls.non_member = make_user()
         cls.url = reverse(viewname='project_detail', args=[cls.project.item.id])
-        cls.data = {'description': 'lorem'}
+        cls.data = {'description': 'lorem', 'resourcetype': 'SequenceLabelingProject'}
 
     def test_return_project_to_member(self):
         for member in self.project.users:

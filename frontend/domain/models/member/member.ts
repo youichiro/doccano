@@ -1,17 +1,12 @@
 export class MemberItem {
-  constructor(
-    public id: number,
-    public user: number,
-    public role: number,
-    public username: string,
-    public rolename: string
-  ) {}
+  id: number;
+  user: number;
+  role: number;
+  username: string;
+  rolename: string;
 
-  static valueOf(
-    { id, user, role, username, rolename }:
-    { id: number, user: number, role: number, username: string, rolename: string }
-  ): MemberItem {
-    return new MemberItem(id, user, role, username, rolename)
+  get isProjectAdmin(): boolean {
+    return this.rolename === 'project_admin'
   }
 
   toObject(): Object {
